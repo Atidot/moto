@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import re
 import uuid
 from copy import copy
+from subprocess import Popen, PIPE
 from datetime import datetime
 from random import random, randint
 
@@ -723,6 +724,19 @@ class EC2ContainerServiceBackend(BaseBackend):
         else:
             raise Exception("{0} is not a task_definition".format(task_definition_name))
 
+    def validate_env_vars_in_docker(self):
+        try:
+            p = Popen(['docker', 'run', '-ti', 'atidot/model', 'env'], stdout=PIPE).communicate()
+        except:
+            assert False
+
+        if not p:
+            assert False
+
+        data = p[0].decode()
+
+        assert 'ATIDOT__RUNCONFIGURATION' in data
+
     def run_task(self, cluster_str, task_definition_str, count, overrides, started_by):
         if cluster_str:
             cluster_name = cluster_str.split("/")[-1]
@@ -774,6 +788,9 @@ class EC2ContainerServiceBackend(BaseBackend):
                         container_instance, resource_requirements
                     )
                     tasks.append(task)
+
+                    self.validate_env_vars_in_docker()
+
                     self.tasks[cluster_name][task.task_arn] = task
                     placed_count += 1
                     if placed_count == count:
