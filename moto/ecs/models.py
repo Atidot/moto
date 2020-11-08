@@ -724,19 +724,16 @@ class EC2ContainerServiceBackend(BaseBackend):
         else:
             raise Exception("{0} is not a task_definition".format(task_definition_name))
 
-    def validate_env_vars_in_docker(self):
+    def add_env_vars_in_docker(self, overrides):
+        if not overrides:
+            return
         try:
-            #p = Popen(['docker', 'run', '-ti', 'atidot/model', 'env'], stdout=PIPE).communicate()
-            p = Popen(["bash", "-c", "env"], stdout=PIPE).communicate()
+            for env in overrides["containerOverrides"]["environment"]:
+                p = Popen(["bash", "-c", "export", "{name}={val}".format(name=env[0], val=env[1])],
+                          stdout=PIPE).communicate()
+                print(p)
         except Exception as e:
             print(e)
-            assert False
-        if not p:
-            assert False
-
-        data = p[0].decode()
-        print(data)
-        assert 'ATIDOT__RUNCONFIGURATION' in data
 
     def run_task(self, cluster_str, task_definition_str, count, overrides, started_by):
         if cluster_str:
@@ -790,7 +787,7 @@ class EC2ContainerServiceBackend(BaseBackend):
                     )
                     tasks.append(task)
 
-                    self.validate_env_vars_in_docker()
+                    self.add_env_vars_in_docker(overrides)
 
                     self.tasks[cluster_name][task.task_arn] = task
                     placed_count += 1
