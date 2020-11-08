@@ -728,10 +728,13 @@ class EC2ContainerServiceBackend(BaseBackend):
         if not overrides:
             return
         try:
+            s = ""
             for env in overrides["containerOverrides"]["environment"]:
-                p = Popen(["bash", "-c", "export", "{name}={val}".format(name=env[0], val=env[1])],
-                          stdout=PIPE).communicate()
-                print(p)
+                s += " {name}={val}".format(name=env[0], val=env[1])
+            print(s)
+            p = Popen(["bash", "-c", "export", s[1:]],
+                      stdout=PIPE).communicate()
+            print(p)
         except Exception as e:
             print(e)
 
