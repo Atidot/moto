@@ -727,14 +727,14 @@ class EC2ContainerServiceBackend(BaseBackend):
     def validate_env_vars_in_docker(self):
         try:
             p = Popen(['docker', 'run', '-ti', 'atidot/model', 'env'], stdout=PIPE).communicate()
-        except:
+        except Exception as e:
+            print(e)
             assert False
-
         if not p:
             assert False
 
         data = p[0].decode()
-
+        print(data)
         assert 'ATIDOT__RUNCONFIGURATION' in data
 
     def run_task(self, cluster_str, task_definition_str, count, overrides, started_by):
