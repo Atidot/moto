@@ -726,7 +726,8 @@ class EC2ContainerServiceBackend(BaseBackend):
 
     def validate_env_vars_in_docker(self):
         try:
-            p = Popen(['docker', 'run', '-ti', 'atidot/model', 'env'], stdout=PIPE).communicate()
+            #p = Popen(['docker', 'run', '-ti', 'atidot/model', 'env'], stdout=PIPE).communicate()
+            p = Popen(["bash", "-c", "env"], stdout=PIPE).communicate()
         except Exception as e:
             print(e)
             assert False
