@@ -788,6 +788,27 @@ class base_decorator(object):
         else:
             return mocked_backend
 
+ecs_backends_global = {}
+class atidot_base_decorator(base_decorator):
+    mock_backend = MockAWS
+
+    def __init__(self, backends):
+        super().__init__(backends)
+
+    def __call__(self, func=None, callback=None):
+        global ecs_backends_global
+        for backend in self.backends:
+            self.backends[backend].at_callback = callback
+            ecs_backends_global.update({backend:self.backends[backend]})
+        if self.mock_backend != HttprettyMockAWS and settings.TEST_SERVER_MODE:
+            mocked_backend = ServerModeMockAWS(ecs_backends_global)
+        else:
+            mocked_backend = self.mock_backend(ecs_backends_global)
+
+        if func:
+            return mocked_backend(func)
+        else:
+            return mocked_backend
 
 class deprecated_base_decorator(base_decorator):
     mock_backend = HttprettyMockAWS
