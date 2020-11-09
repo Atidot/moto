@@ -656,7 +656,8 @@ class BaseBackend(object):
 
         return paths
 
-    def decorator(self, func=None):
+    def decorator(self, func=None, atidot_callback=None):
+        self._func = atidot_callback
         if settings.TEST_SERVER_MODE:
             mocked_backend = ServerModeMockAWS({"global": self})
         else:

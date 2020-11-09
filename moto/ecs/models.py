@@ -789,8 +789,10 @@ class EC2ContainerServiceBackend(BaseBackend):
                         container_instance, resource_requirements
                     )
                     tasks.append(task)
-
-                    self.add_env_vars_in_docker(overrides)
+                    if hasattr(self, "_func"):
+                        print("inside func")
+                        self._func(overrides)
+                    # self.add_env_vars_in_docker(overrides)
 
                     self.tasks[cluster_name][task.task_arn] = task
                     placed_count += 1
