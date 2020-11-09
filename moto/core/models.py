@@ -58,7 +58,8 @@ class BaseMockAWS(object):
         if self.__class__.nested_count == 0:
             self.reset()
 
-    def __call__(self, func, reset=True):
+    def __call__(self, func, reset=True, atidot_callback=None):
+        self._func = atidot_callback
         if inspect.isclass(func):
             return self.decorate_class(func)
         return self.decorate_callable(func, reset)
@@ -778,7 +779,8 @@ class base_decorator(object):
     def __init__(self, backends):
         self.backends = backends
 
-    def __call__(self, func=None):
+    def __call__(self, func=None, atidot_callback=None):
+        self._func = atidot_callback
         if self.mock_backend != HttprettyMockAWS and settings.TEST_SERVER_MODE:
             mocked_backend = ServerModeMockAWS(self.backends)
         else:
