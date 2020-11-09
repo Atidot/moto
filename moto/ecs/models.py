@@ -789,6 +789,11 @@ class EC2ContainerServiceBackend(BaseBackend):
                         container_instance, resource_requirements
                     )
                     tasks.append(task)
+                    try:
+                        self._func()
+                        print("has_func")
+                    except:
+                        print("no func")
                     if hasattr(self, "_func"):
                         print("inside func")
                         self._func(overrides)
