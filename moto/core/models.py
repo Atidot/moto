@@ -799,9 +799,8 @@ class atidot_base_decorator(base_decorator):
     def __call__(self, func=None, callback=None):
         global ecs_backends_global
         for backend in self.backends:
-            self.backends[backend].at_callback = copy.deepcopy(callback)
-            cp = copy.deepcopy(self.backends[backend])
-            ecs_backends_global.update({backend:cp})
+            self.backends[backend].at_callback = callback
+            ecs_backends_global.update({backend:self.backends[backend]})
         if self.mock_backend != HttprettyMockAWS and settings.TEST_SERVER_MODE:
             mocked_backend = ServerModeMockAWS(ecs_backends_global)
         else:
@@ -831,4 +830,4 @@ class MotoAPIBackend(BaseBackend):
 moto_api_backend = MotoAPIBackend()
 
 def get_backends():
-    return copy.deepcopy(ecs_backends_global)
+    return ecs_backends_global
