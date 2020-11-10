@@ -785,6 +785,8 @@ class EC2ContainerServiceBackend(BaseBackend):
                                          count=count,
                                          overrides=overrides,
                                          started_by=started_by)
+                    else:
+                        assert False, "no function was ran"
 
                     self.tasks[cluster_name][task.task_arn] = task
                     placed_count += 1
