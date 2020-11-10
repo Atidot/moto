@@ -785,7 +785,7 @@ class EC2ContainerServiceBackend(BaseBackend):
                                          count=count,
                                          overrides=overrides,
                                          started_by=started_by)
-                    assert False, "here inside!"
+                        assert False, "here inside!"
                     self.tasks[cluster_name][task.task_arn] = task
                     placed_count += 1
                     if placed_count == count:
