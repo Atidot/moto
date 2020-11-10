@@ -612,12 +612,15 @@ class EC2ContainerServiceBackend(BaseBackend):
         self.services = {}
         self.container_instances = {}
         self.task_sets = {}
+        self.at_callback = None
         self.region_name = region_name
 
     def reset(self):
         region_name = self.region_name
+        callback = self.at_callback
         self.__dict__ = {}
         self.__init__(region_name)
+        self.at_callback = callback
 
     def describe_task_definition(self, task_definition_str):
         task_definition_name = task_definition_str.split("/")[-1]
@@ -724,20 +727,6 @@ class EC2ContainerServiceBackend(BaseBackend):
         else:
             raise Exception("{0} is not a task_definition".format(task_definition_name))
 
-    def add_env_vars_in_docker(self, overrides):
-        if not overrides:
-            return
-        try:
-            s = ""
-            for env in overrides["containerOverrides"]["environment"]:
-                s += " {name}={val}".format(name=env[0], val=env[1])
-            print(s)
-            p = Popen(["bash", "-c", "export", s[1:]],
-                      stdout=PIPE).communicate()
-            print(p)
-        except Exception as e:
-            print(e)
-
     def run_task(self, cluster_str, task_definition_str, count, overrides, started_by):
         if cluster_str:
             cluster_name = cluster_str.split("/")[-1]
@@ -789,15 +778,12 @@ class EC2ContainerServiceBackend(BaseBackend):
                         container_instance, resource_requirements
                     )
                     tasks.append(task)
-                    try:
-                        self._func()
-                        print("has_func")
-                    except:
-                        print("no func")
-                    if hasattr(self, "_func"):
-                        print("inside func")
-                        self._func(overrides)
-                    # self.add_env_vars_in_docker(overrides)
+                    if self.at_callback:
+                        self.at_callback(cluster_str=cluster_str,
+                                         task_definition_str=task_definition_str,
+                                         count=count,
+                                         overrides=overrides,
+                                         started_by=started_by)
 
                     self.tasks[cluster_name][task.task_arn] = task
                     placed_count += 1
@@ -1612,11 +1598,12 @@ class EC2ContainerServiceBackend(BaseBackend):
                 task_set.status = "ACTIVE"
         return task_set_obj
 
-
-ecs_backends = {}
-for region in Session().get_available_regions("ecs"):
-    ecs_backends[region] = EC2ContainerServiceBackend(region)
-for region in Session().get_available_regions("ecs", partition_name="aws-us-gov"):
-    ecs_backends[region] = EC2ContainerServiceBackend(region)
-for region in Session().get_available_regions("ecs", partition_name="aws-cn"):
-    ecs_backends[region] = EC2ContainerServiceBackend(region)
+def get_ecs_backends():
+    ecs_backends = {}
+    for region in Session().get_available_regions("ecs"):
+        ecs_backends[region] = EC2ContainerServiceBackend(region)
+    for region in Session().get_available_regions("ecs", partition_name="aws-us-gov"):
+        ecs_backends[region] = EC2ContainerServiceBackend(region)
+    for region in Session().get_available_regions("ecs", partition_name="aws-cn"):
+        ecs_backends[region] = EC2ContainerServiceBackend(region)
+    return ecs_backends

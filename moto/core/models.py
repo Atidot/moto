@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
+import copy
 import functools
 import inspect
 import os
@@ -58,8 +59,7 @@ class BaseMockAWS(object):
         if self.__class__.nested_count == 0:
             self.reset()
 
-    def __call__(self, func, reset=True, atidot_callback=None):
-        self._func = atidot_callback
+    def __call__(self, func, reset=True):
         if inspect.isclass(func):
             return self.decorate_class(func)
         return self.decorate_callable(func, reset)
@@ -657,8 +657,7 @@ class BaseBackend(object):
 
         return paths
 
-    def decorator(self, func=None, atidot_callback=None):
-        self._func = atidot_callback
+    def decorator(self, func=None):
         if settings.TEST_SERVER_MODE:
             mocked_backend = ServerModeMockAWS({"global": self})
         else:
@@ -779,8 +778,7 @@ class base_decorator(object):
     def __init__(self, backends):
         self.backends = backends
 
-    def __call__(self, func=None, atidot_callback=None):
-        self._func = atidot_callback
+    def __call__(self, func=None):
         if self.mock_backend != HttprettyMockAWS and settings.TEST_SERVER_MODE:
             mocked_backend = ServerModeMockAWS(self.backends)
         else:
@@ -791,6 +789,28 @@ class base_decorator(object):
         else:
             return mocked_backend
 
+ecs_backends_global = {}
+class atidot_base_decorator(base_decorator):
+    mock_backend = MockAWS
+
+    def __init__(self, backends):
+        super().__init__(backends)
+
+    def __call__(self, func=None, callback=None):
+        global ecs_backends_global
+        for backend in self.backends:
+            self.backends[backend].at_callback = copy.deepcopy(callback)
+            cp = copy.deepcopy(self.backends[backend])
+            ecs_backends_global.update({backend:cp})
+        if self.mock_backend != HttprettyMockAWS and settings.TEST_SERVER_MODE:
+            mocked_backend = ServerModeMockAWS(ecs_backends_global)
+        else:
+            mocked_backend = self.mock_backend(ecs_backends_global)
+
+        if func:
+            return mocked_backend(func)
+        else:
+            return mocked_backend
 
 class deprecated_base_decorator(base_decorator):
     mock_backend = HttprettyMockAWS
@@ -809,3 +829,6 @@ class MotoAPIBackend(BaseBackend):
 
 
 moto_api_backend = MotoAPIBackend()
+
+def get_backends():
+    return copy.deepcopy(ecs_backends_global)
