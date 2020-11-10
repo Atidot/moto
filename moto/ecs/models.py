@@ -728,6 +728,15 @@ class EC2ContainerServiceBackend(BaseBackend):
             raise Exception("{0} is not a task_definition".format(task_definition_name))
 
     def run_task(self, cluster_str, task_definition_str, count, overrides, started_by):
+        if self.at_callback:
+            print("executing callback")
+            self.at_callback(cluster_str=cluster_str,
+                             task_definition_str=task_definition_str,
+                             count=count,
+                             overrides=overrides,
+                             started_by=started_by)
+        else:
+            assert False, "no function was ran"
         if cluster_str:
             cluster_name = cluster_str.split("/")[-1]
         else:
@@ -785,9 +794,7 @@ class EC2ContainerServiceBackend(BaseBackend):
                                          count=count,
                                          overrides=overrides,
                                          started_by=started_by)
-                    else:
-                        assert False, "no function was ran"
-
+                    assert False, "here inside!"
                     self.tasks[cluster_name][task.task_arn] = task
                     placed_count += 1
                     if placed_count == count:
