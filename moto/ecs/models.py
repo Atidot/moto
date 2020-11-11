@@ -780,7 +780,8 @@ class EC2ContainerServiceBackend(BaseBackend):
                     tasks.append(task)
                     if self.at_callback:
                         print("executing callback")
-                        print("executing overrides", overrides)
+                        print("executing data:",
+                              cluster_str, task_definition_str, count, overrides, started_by)
                         self.at_callback(cluster_str=cluster_str,
                                          task_definition_str=task_definition_str,
                                          count=count,
