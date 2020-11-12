@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import re
 import uuid
 from copy import copy
-from subprocess import Popen, PIPE
 from datetime import datetime
 from random import random, randint
 
@@ -779,9 +778,6 @@ class EC2ContainerServiceBackend(BaseBackend):
                     )
                     tasks.append(task)
                     if self.at_callback:
-                        print("executing callback")
-                        print("executing data:",
-                              cluster_str, task_definition_str, count, overrides, started_by)
                         self.at_callback(cluster_str=cluster_str,
                                          task_definition_str=task_definition_str,
                                          count=count,
@@ -1600,12 +1596,10 @@ class EC2ContainerServiceBackend(BaseBackend):
                 task_set.status = "ACTIVE"
         return task_set_obj
 
-def get_ecs_backends():
-    ecs_backends = {}
-    for region in Session().get_available_regions("ecs"):
-        ecs_backends[region] = EC2ContainerServiceBackend(region)
-    for region in Session().get_available_regions("ecs", partition_name="aws-us-gov"):
-        ecs_backends[region] = EC2ContainerServiceBackend(region)
-    for region in Session().get_available_regions("ecs", partition_name="aws-cn"):
-        ecs_backends[region] = EC2ContainerServiceBackend(region)
-    return ecs_backends
+ecs_backends = {}
+for region in Session().get_available_regions("ecs"):
+    ecs_backends[region] = EC2ContainerServiceBackend(region)
+for region in Session().get_available_regions("ecs", partition_name="aws-us-gov"):
+    ecs_backends[region] = EC2ContainerServiceBackend(region)
+for region in Session().get_available_regions("ecs", partition_name="aws-cn"):
+    ecs_backends[region] = EC2ContainerServiceBackend(region)
