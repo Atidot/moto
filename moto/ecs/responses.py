@@ -2,7 +2,11 @@ from __future__ import unicode_literals
 import json
 
 from moto.core.responses import BaseResponse
-from .models import ecs_backends
+from ..core.models import should_use_atidot_backends
+if should_use_atidot_backends:
+    from ..core.models import ecs_backends
+else:
+    from .models import ecs_backends
 
 
 class EC2ContainerServiceResponse(BaseResponse):
